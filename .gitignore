@@ -1,0 +1,18 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+test2.py
+test.py
+D:\trend-bot\src\trend_bot\discord_delivery.py
+D:\trend-bot\src\trend_bot\test_ai.py
+
+
+# Virtual environments
+.venv
+
+.env

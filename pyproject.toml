@@ -1,0 +1,28 @@
+[project]
+name = "trend-bot"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Karan", email = "karanverma55777@gmail.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "google-genai>=2.22.0",
+    "groq>=1.7.0",
+    "openai>=3.7.0",
+    "psycopg2>=2.9.12",
+    "pydantic>=2.13.5",
+    "pydantic-settings>=2.15.0",
+    "pytrends>=4.9.2",
+    "requests>=2.34.2",
+    "schedule>=1.2.2",
+    "sqlalchemy>=2.0.52",
+]
+
+[project.scripts]
+trend-bot = "trend_bot:main"
+
+[build-system]
+requires = ["uv_build>=0.12.5,<0.13.0"]
+build-backend = "uv_build"
