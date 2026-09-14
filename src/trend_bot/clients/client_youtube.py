@@ -9,10 +9,6 @@ class YouTubeClient:
 
     def __init__(self, api_key: str | None):
         self.api_key = api_key
-        if not self.api_key:
-            raise ValueError(
-                "YouTube API key is missing."
-            )
 
     def search_videos(self, query: str | list[str], max_results: int = 5) -> list[Video]:
 

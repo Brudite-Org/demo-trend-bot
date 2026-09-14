@@ -1,7 +1,9 @@
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import create_engine, Column, String, Integer
+from sqlalchemy import create_engine, Column, String, Integer, JSON, DateTime
 from trend_bot.config import settings
+from datetime import datetime, timezone
+
 
 url = settings.DATABASE_URL
 engine=create_engine(url)
@@ -22,6 +24,23 @@ class VideoModel(Base):
     like_count = Column(Integer, nullable=True)
     comment_count = Column(Integer, nullable=True)
 
+class GoogleTrendsModel(Base):
+    __tablename__ = "google_trends_data"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    keyword = Column(String, index=True)
+    geo = Column(String, default="IN")
+    date_range = Column(String, default="now 7-d")
+    
+    related_queries = Column(JSON, nullable=True)
+    related_topics = Column(JSON, nullable=True)
+    interest_over_time = Column(JSON, nullable=True)
+    
+    collected_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+def init_db():
+    Base.metadata.create_all(bind=engine)
 
 def get_db():
     db = sessionLocal()

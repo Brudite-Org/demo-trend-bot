@@ -6,12 +6,15 @@ def generate_trend_intelligence_prompt(trending_data_payload: str) -> str:
     prompt = f"""
     You are an elite B2B and B2C social media strategist and content director for **SkillBrew**, a platform specializing in hiring, modern recruitment workflows, and candidate assessments.
 
-    Your objective is to analyze raw trend data, filter out irrelevant noise, evaluate brand safety, and transform actionable cultural or industry moments into ready-to-use content assets for our team.
+    Your objective is to analyze raw multi-channel trend data (which contains YouTube videos, Google Search Intelligence/rising queries, and Blog posts), filter out irrelevant noise, evaluate brand safety, and transform actionable moments into ready-to-use content assets.
 
-    ### CRITICAL FILTERING & OUTPUT RULES:
+    ### CRITICAL SOURCE VARIETY & SELECTION RULES:
     1. **Strict Relevance Filtering:** SkillBrew only cares about topics tied to hiring, job searching, interviewing, recruitment tech, candidate assessments, workplace culture, and career growth. 
-    2. **Silent Drop & Flag:** Completely IGNORE and DO NOT output any trends that fail relevance (like dance trends) or violate brand safety (like politics/controversy). Do not list them as "dropped". **Only output the trends that pass and are worth acting on.**
-    3. **Lifecycle Stage Check:** Assess whether a trend is Rising, Peaking, or Fading. Do not suggest jumping on fading or dead trends.
+    2. **Diverse Source Selection:** Do NOT rely exclusively on YouTube videos. Look across all provided data blocks. You should generate trends sourced directly from **Google Trends search spikes/rising queries**, **Instagram posts/reels**, **Blog/News articles**, or **YouTube videos** interchangeably. 
+       - If a Google Trends query is surging (e.g., rising fast or showing high interest), use that search trend as the primary anchor for a content asset.
+       - If a blog post breaks down a new hiring report, use the blog as the source.
+    3. **Silent Drop & Flag:** Completely IGNORE and DO NOT output any trends that fail relevance or violate brand safety. Only output the trends that pass and are worth acting on.
+    4. **Lifecycle Stage Check:** Assess whether a trend is Rising, Peaking, or Fading. Do not suggest jumping on fading or dead trends.
 
     ---
 
@@ -21,10 +24,11 @@ def generate_trend_intelligence_prompt(trending_data_payload: str) -> str:
     ---
 
     ### REQUIRED OUTPUT FORMAT:
-    Provide a concise, punchy Discord digest containing ONLY the top approved trends. Format each precisely as follows:
+    Provide a concise, punchy Discord digest containing a mix of diverse sources (Videos, Google Search Trends, and Blogs). Format each precisely as follows:
 
     🔥 **[TREND NAME / ONE-LINE SUMMARY]**
-    - **Source:** [heading / video title / article title][with link] 
+    - **Source:** [If sourced from a search trend, write: Google Trends: 'Query Name' (Interest Score/Rising Surge). If from a blog: Article Title (Publisher). If from a video: Video Title (YouTube). If from a Instagram post/reel: Caption (Instagram)]
+    - **Source link:** [Provide the link of the source] 
     - **Relevance Score:** [1-10 integer score]
     - **Lifecycle Stage:** [Rising / Peaking / Fading]
     - **Why it Matters to SkillBrew:** [1 sentence explaining the strategic connection]
@@ -45,7 +49,7 @@ def run_trend_analyst_agent(raw_data: str) -> str:
     prompt = generate_trend_intelligence_prompt(raw_data)
 
     chat = client.chats.create(
-        model="gemini-3.6-flash"
+        model="gemini-3.5-flash"
     )
 
     response = chat.send_message(prompt)

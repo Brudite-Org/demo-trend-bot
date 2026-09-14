@@ -1,50 +1,85 @@
-from trend_bot.client_youtube import YouTubeClient
-from trend_bot.db_opretaions import init_db, save_videos_to_db
-from trend_bot.database import sessionLocal
-from trend_bot.analytics import get_video_analytics
+from trend_bot.collectors.google_trends_collector import GoogleTrendsCollector
+from trend_bot.collectors.youtube_collector import YouTubeCollector
+from trend_bot.database.database import sessionLocal
 from trend_bot.ai_analysis import run_trend_analyst_agent
 from trend_bot.discord_dispatcher import send_to_discord
 from trend_bot.config import settings
+from trend_bot.collectors.instagram_collector import InstagramCollector
+from trend_bot.database.database import init_db 
+
 
 def main():
 
     init_db()
 
-    keywords = ["talent acquisition", "hr tech"]
-    client = YouTubeClient(api_key=settings.YOUTUBE_API_KEY)
-    videos = client.search_videos(query=keywords, max_results=5)
+    google_keywords = [
+    "talent assessment",
+    "skill assessment",
+    "HR technology",
+    "talent acquisition",
+    "recruiting software",
+    "candidate experience",
+    "skills-based hiring",
+    "pre-employment testing",
+    "employee assessment",
+    "hiring software",
+    "tech hiring",
+    "engineering hiring",
+    "technical hiring",
+    "recruiter productivity",
+    "human resources software",
+    "HR analytics",
+    "workforce technology",
+    "remote hiring",
+    "gig economy hiring",
+    "diversity hiring",
+    "employer branding",
+    ]
 
-    print(f"Fetched {len(videos)} from API.")
+
+    youtube_keywords = [
+    "talent assessment", "skills-based hiring", "AI recruiting",
+    "candidate experience", "HR technology", "pre-employment testing",
+    "technical interview", "engineering hiring", "tech hiring 2026",
+    "workforce assessment", "employee skills", "hiring software","recruiter tips", "interview hack", "hiring mistake", "resume tips",
+    "job search", "career advice", "HR tip", "work hack", "salary negotiation",
+    "behavioral interview", "STAR method", "LinkedIn profile",
+    "skills assessment", "candidate red flag", "job offer",
+    ]
+
+    target_tags = ["FutureOfWork", "TalentAcquisition", "hiringtrends", "recruitmentautomation"]
+
+    ##Youtube
+    print("Fetching from Youtube......")
+    youtube_collector = YouTubeCollector(api_key=settings.YOUTUBE_API_KEY if settings.YOUTUBE_API_KEY else "NO YOUTUBE API KEY")
+    videos = youtube_collector.collect(query=youtube_keywords, max_results=5)
+
+    ##Google Trends
+    print("Fetching from Google Trends.....")
+    # google_trends_collector = GoogleTrendsCollector(api_key=settings.SERPAPI_KEY if settings.SERPAPI_KEY else "NO SERP API KEY")
+    # trends_results = google_trends_collector.collect(google_keywords)
+
+    #Instagram
+    # print("Fetching from Instagram......")
+    # instagram_collector = InstagramCollector(api_key=settings.APIFY_INSTAGRAM_TOKEN if settings.APIFY_INSTAGRAM_TOKEN else "NO INSTAGRAM TOKEN")
+    # ig_posts = instagram_collector.collect(target_tags, posts_limit=100, top_n=5, publish_after="2026-09-01")
+    # instagram_summary = instagram_collector.format_summary(ig_posts)
 
     db = sessionLocal()
     try:
-        save_videos_to_db(db, videos)
+        youtube_collector.save_to_db(db, videos)
+        # google_trends_collector.save_to_db(db, trends_results)
 
-        stats = get_video_analytics(db)
+        youtube_summary = youtube_collector.format_summary(videos)
+        # google_trends_summary = google_trends_collector.format_summary(trends_results)
         
-        print(f"Total Videos Analyzed: {stats['total_videos']}")
-        print(f"Total Views: {stats['total_views']:,} (Avg: {stats['avg_views']:,})")
-        print(f"Total Likes: {stats['total_likes']:,} (Avg: {stats['avg_likes']:,})")
-        print(f"Total Comments: {stats['total_comments']:,} (Avg: {stats['avg_comments']:,})")
-        
-        if stats['top_video_title']:
-            print(f"\nTop Trending Video: '{stats['top_video_title']}' ({stats['top_video_views']:,} views)")
-
-        formatted_trends: list[str] = []
-        for i, video in enumerate(videos, 1):
-            title = getattr(video, "title", "Untitled")
-            description = getattr(video, "description", "")
-            channel = getattr(video, "channel_title", "Unknown Channel")
-            vid_id = getattr(video, "video_id", None)
-            video_url = f"https://www.youtube.com/watch?v={vid_id}" if vid_id else "N/A"
-
-            formatted_trends.append(
-                f"{i}. YouTube Video: \"{title}\" by {channel}\n"
-                f"   - Description: {description}...\n"
-                f"   - URL: {video_url}"
-            )
-
-        trending_data_payload = "\n".join(formatted_trends)
+        trending_data_payload = f"""
+        {youtube_summary}"""
+        # [Google Trends Data]
+        # {google_trends_summary}
+        # [Instagram data]
+        # {instagram_summary}
+        # """
 
         print("\nGenerating SkillBrew Social Media Trend Intelligence Digest...")
         discord_digest = run_trend_analyst_agent(trending_data_payload)

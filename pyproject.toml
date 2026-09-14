@@ -12,12 +12,17 @@ dependencies = [
     "groq>=1.7.0",
     "openai>=3.7.0",
     "psycopg2>=2.9.12",
-    "pydantic>=2.13.5",
+    "pydantic>=2.12.5",
     "pydantic-settings>=2.15.0",
     "pytrends>=4.9.2",
     "requests>=2.34.2",
     "schedule>=1.2.2",
     "sqlalchemy>=2.0.52",
+    "instagrapi>=2.18.18",
+    "pillow>=12.3.0",
+    "pycryptodomex>=3.23.0",
+    "pysocks>=1.7.1",
+    "apify-client>=3.2.0",
 ]
 
 [project.scripts]
