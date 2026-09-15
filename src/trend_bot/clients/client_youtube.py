@@ -1,8 +1,10 @@
 import requests
+
+from datetime import datetime, timedelta, timezone
 from typing import Any
+
 from trend_bot.models import Video
 from trend_bot.config import settings
-from datetime import datetime, timedelta, timezone
 
 class YouTubeClient:
     BASE_URL = settings.YOUTUBE_BASE_URL

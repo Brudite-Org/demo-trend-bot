@@ -4,7 +4,10 @@ from typing import Any, Dict, List
 
 from trend_bot.clients.client_youtube import youtube_client
 from trend_bot.database.database import VideoModel
+from trend_bot.logger import setup_logger
 from trend_bot.utils.constants import all_fields, update_fields
+
+logger = setup_logger("youtube_collector")
 
 class YouTubeCollector:
     """Collects, normalizes, manages persistence, and computes analytics for YouTube video trends."""
@@ -34,7 +37,7 @@ class YouTubeCollector:
                 videos_data.append(video_data)
             return videos_data
         except Exception as e:
-            print(f"Failed to fetch YouTube intelligence: {e}")
+            logger.error(f"Failed to fetch YouTube intelligence: {e}")
             return []
 
     def save_to_db(self, db: Session, videos: List[Dict[str, Any]]) -> None:
@@ -58,9 +61,9 @@ class YouTubeCollector:
                 db_video = VideoModel(**{field: video.get(field) for field in all_fields})
                 db.add(db_video)
                 added_count += 1
-                print(f"Added: {video.get('title')}")
+                logger.info(f"Added: {video.get('title')}")
         db.commit()
-        print(f"Committed to db.({added_count} added, {updated_count} updated)")
+        logger.info(f"Committed to db.({added_count} added, {updated_count} updated)")
 
     def get_video_analytics(self, db: Session) -> dict[str, Any]:
         """Calculates overall metrics and trend summaries from the stored videos[cite: 1]."""

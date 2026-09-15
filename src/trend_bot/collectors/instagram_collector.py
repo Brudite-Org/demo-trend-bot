@@ -3,6 +3,9 @@ from sqlalchemy.orm import Session
 
 from trend_bot.clients.client_instagram import instagram_client
 from trend_bot.database.database import InstagramModel
+from trend_bot.logger import setup_logger
+
+logger = setup_logger("instagram_collector")
 
 class InstagramCollector:
     def __init__(self, api_key: str | None = None):
@@ -29,7 +32,7 @@ class InstagramCollector:
             )
             return sorted_posts[:top_n]
         except Exception as e:
-            print(f"Failed to fetch intelligence via Apify: {e}")
+            logger.error(f"Failed to fetch intelligence via Apify: {e}")
             return []
 
     def save_to_db(self, db: Session, posts: List[Dict[str, Any]]) -> None:
@@ -66,7 +69,7 @@ class InstagramCollector:
                 db.add(db_post)
                 added_count += 1
         db.commit()
-        print(f"Committed Instagram data to db. ({added_count} added, {updated_count} updated)")
+        logger.info(f"Committed Instagram data to db. ({added_count} added, {updated_count} updated)")
 
     def format_summary(self, posts: List[Dict[str, Any]]) -> str:
         lines = ["[Top Market Content & Associated Audio Intelligence]"]
