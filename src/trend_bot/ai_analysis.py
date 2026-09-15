@@ -53,6 +53,6 @@ def run_trend_analyst_agent(raw_data: str) -> str:
         model="gemini-3.6-flash"
     )
 
-    response = chat.send_message(prompt)
+    response = chat.send_message(prompt) #type: ignore
     
-    return response.text
+    return response.text #type: ignore

@@ -1,6 +1,10 @@
-from typing import Any, Dict, List
-from trend_bot.config import settings
 import requests
+from typing import Any, Dict, List
+
+from trend_bot.config import settings
+from trend_bot.logger import setup_logger
+
+logger = setup_logger("client_google_trends")
 
 class GoogleTrendsClient:
     BASE_URL = settings.SERP_BASE_URL
@@ -34,9 +38,11 @@ class GoogleTrendsClient:
         try:
             data = response.json()
         except ValueError as e:
+            logger.error("SerpApi returned invalid JSON")
             raise RuntimeError(f"SerpApi returned invalid JSON: {response.text[:500]}") from e
 
         if "error" in data:
+            logger.error("SerpApi error")
             raise RuntimeError(f"SerpApi error: {data['error']}")
 
         return data
@@ -51,6 +57,7 @@ class GoogleTrendsClient:
         if not keywords:
             return {}
         if len(keywords) > 5:
+            logger.error("TIMESERIES supports a maximum of 5 keywords.")
             raise ValueError("TIMESERIES supports a maximum of 5 keywords.")
         keyword_query = ",".join(keywords)
         return self.search(keyword=keyword_query, geo=geo, date=date, data_type="TIMESERIES")

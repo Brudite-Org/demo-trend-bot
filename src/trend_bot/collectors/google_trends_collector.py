@@ -3,19 +3,21 @@ from typing import Any, Dict, List
 
 from trend_bot.clients.client_google_trends import google_client
 from trend_bot.database.database import GoogleTrendsModel
+from trend_bot.logger import setup_logger
+
+logger = setup_logger("google_trends_collector")
 
 class GoogleTrendsCollector:
     """Collects and organizes Google Trends data for multiple keywords."""
 
-    def __init__(self, api_key: str | None = None, geo: str = "IN", date: str = "now 7-d"):
-        self.api_key = api_key
+    def __init__(self, geo: str = "IN", date: str = "now 7-d"):
         self.geo = geo
         self.date = date 
         self.client = google_client
 
     def collect_keyword_info(self, keyword: str) -> Dict[str, Any]:
         """Collect all trend information for one keyword."""
-        print(f"Collecting Google Trends: {keyword}")
+        logger.info(f"Collecting Google Trends: {keyword}")
         related_queries = self.client.get_related_queries(keyword=keyword, geo=self.geo, date=self.date)
         related_topics = self.client.get_related_topics(keyword=keyword, geo=self.geo, date=self.date)
 
@@ -40,7 +42,7 @@ class GoogleTrendsCollector:
                 result = self.collect_keyword_info(keyword)
                 results.append(result)
             except Exception as e:
-                print(f"Failed to collect {keyword}: {e}")
+                logger.error(f"Failed to collect {keyword}: {e}")
                 results.append({"keyword": keyword, "error": str(e)})
 
         if cleaned_keywords:
@@ -50,7 +52,7 @@ class GoogleTrendsCollector:
                 )
                 self._attach_timeseries(results, timeseries)
             except Exception as e:
-                print(f"Failed to collect interest over time: {e}")
+                logger.error(f"Failed to collect interest over time: {e}")
 
         return results
 

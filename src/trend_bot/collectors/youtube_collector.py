@@ -4,13 +4,15 @@ from typing import Any, Dict, List
 
 from trend_bot.clients.client_youtube import youtube_client
 from trend_bot.database.database import VideoModel
+from trend_bot.logger import setup_logger
 from trend_bot.utils.constants import all_fields, update_fields
+
+logger = setup_logger("youtube_collector")
 
 class YouTubeCollector:
     """Collects, normalizes, manages persistence, and computes analytics for YouTube video trends."""
 
-    def __init__(self, api_key: str | None = None):
-        self.api_key = api_key
+    def __init__(self):
         self.client = youtube_client
 
     def collect(self, query: str | List[str], max_results: int = 5) -> List[Dict[str, Any]]:
@@ -34,7 +36,7 @@ class YouTubeCollector:
                 videos_data.append(video_data)
             return videos_data
         except Exception as e:
-            print(f"Failed to fetch YouTube intelligence: {e}")
+            logger.error(f"Failed to fetch YouTube intelligence: {e}")
             return []
 
     def save_to_db(self, db: Session, videos: List[Dict[str, Any]]) -> None:
@@ -58,9 +60,9 @@ class YouTubeCollector:
                 db_video = VideoModel(**{field: video.get(field) for field in all_fields})
                 db.add(db_video)
                 added_count += 1
-                print(f"Added: {video.get('title')}")
+                logger.info(f"Added: {video.get('title')}")
         db.commit()
-        print(f"Committed to db.({added_count} added, {updated_count} updated)")
+        logger.info(f"Committed to db.({added_count} added, {updated_count} updated)")
 
     def get_video_analytics(self, db: Session) -> dict[str, Any]:
         """Calculates overall metrics and trend summaries from the stored videos[cite: 1]."""
@@ -76,17 +78,19 @@ class YouTubeCollector:
             func.sum(VideoModel.comment_count).label("total_comments"),
             func.avg(VideoModel.comment_count).label("avg_comments"),
         ).first()
-        
+
+        agg = {key: getattr(aggregates, key) for key in aggregates.keys()} if aggregates else {}
+
         top_video = db.query(VideoModel).order_by(VideoModel.view_count.desc()).first()
-        
+
         return {
             "total_videos": total_videos,
-            "total_views": aggregates.total_views or 0,
-            "avg_views": round(aggregates.avg_views or 0, 2),
-            "total_likes": aggregates.total_likes or 0,
-            "avg_likes": round(aggregates.avg_likes or 0, 2),
-            "total_comments": aggregates.total_comments or 0,
-            "avg_comments": round(aggregates.avg_comments or 0, 2),
+            "total_views": agg.get("total_views") or 0,
+            "avg_views": round(agg.get("avg_views") or 0, 2),
+            "total_likes": agg.get("total_likes") or 0,
+            "avg_likes": round(agg.get("avg_likes") or 0, 2),
+            "total_comments": agg.get("total_comments") or 0,
+            "avg_comments": round(agg.get("avg_comments") or 0, 2),
             "top_video_title": top_video.title if top_video else None,
             "top_video_views": top_video.view_count if top_video else 0,
         }

@@ -2,6 +2,9 @@ from apify_client import ApifyClient
 from typing import Any, Dict, List, Iterator
 
 from trend_bot.config import settings
+from trend_bot.logger import setup_logger
+
+logger = setup_logger("client_logger")
 
 class InstagramClient:
     """Client for extracting posts, reels, and their embedded music metadata via Apify."""
@@ -31,17 +34,19 @@ class InstagramClient:
 
         run = self.client.actor(actor_id).call(run_input=run_input)
         if not run:
+            logger.error("Apify actor run failed.")
             raise RuntimeError("Apify actor run failed.")
 
         dataset_id = getattr(run, "default_dataset_id", None)
         if not dataset_id:
+            logger.error("Could not retrieve default dataset ID.")
             raise RuntimeError("Could not retrieve default dataset ID.")
 
-        items: Iterator[dict[Any, Any]] = self.client.dataset(dataset_id).iterate_items()
+        items: Iterator[dict[Any, Any]] = self.client.dataset(dataset_id).iterate_items() #type: ignore
 
         parsed_data: list[dict[str, Any]] = []
         for item in items:
-            # Extract embedded music/audio info if present on the Reel/Post
+            # Extract the embedded music/audio info if present on the Reel/Post
             music_info: Any = item.get("musicInfo") or item.get("audioData") or {}
             
             parsed_data.append({
