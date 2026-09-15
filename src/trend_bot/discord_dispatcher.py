@@ -1,4 +1,5 @@
 import requests
+
 from trend_bot.config import settings
 
 def send_to_discord(content: str) -> bool:
@@ -10,7 +11,7 @@ def send_to_discord(content: str) -> bool:
         return False
 
     # Discord has a 2000 character limit per message. 
-    # If your digest is longer, we can split it or truncate safely.
+    # If the digest is longer, we split it and send in parts.
     print(len(content))
     if len(content) <= 1900:
         payloads = [{"content": content}]

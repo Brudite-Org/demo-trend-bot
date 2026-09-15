@@ -102,3 +102,5 @@ class YouTubeClient:
             enriched_videos.append(enriched_video)
 
         return enriched_videos
+
+youtube_client = YouTubeClient(settings.YOUTUBE_API_KEY)

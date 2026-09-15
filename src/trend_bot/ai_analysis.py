@@ -1,4 +1,5 @@
 from google import genai
+
 from trend_bot.config import settings
 
 
@@ -49,7 +50,7 @@ def run_trend_analyst_agent(raw_data: str) -> str:
     prompt = generate_trend_intelligence_prompt(raw_data)
 
     chat = client.chats.create(
-        model="gemini-3.5-flash"
+        model="gemini-3.6-flash"
     )
 
     response = chat.send_message(prompt)
