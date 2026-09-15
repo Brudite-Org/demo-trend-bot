@@ -8,8 +8,7 @@ from trend_bot.logger import setup_logger
 logger = setup_logger("instagram_collector")
 
 class InstagramCollector:
-    def __init__(self, api_key: str | None = None):
-        self.api_key = api_key
+    def __init__(self):
         self.client = instagram_client
 
     def collect(

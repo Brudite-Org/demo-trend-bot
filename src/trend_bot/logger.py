@@ -1,6 +1,8 @@
 import logging
 import sys
 
+logging.basicConfig(level=logging.INFO)
+
 def setup_logger(name: str) -> logging.Logger:
     """Configures and returns a standard logger instance."""
     logger = logging.getLogger(name)

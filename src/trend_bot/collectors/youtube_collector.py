@@ -12,8 +12,7 @@ logger = setup_logger("youtube_collector")
 class YouTubeCollector:
     """Collects, normalizes, manages persistence, and computes analytics for YouTube video trends."""
 
-    def __init__(self, api_key: str | None = None):
-        self.api_key = api_key
+    def __init__(self):
         self.client = youtube_client
 
     def collect(self, query: str | List[str], max_results: int = 5) -> List[Dict[str, Any]]:
@@ -79,17 +78,19 @@ class YouTubeCollector:
             func.sum(VideoModel.comment_count).label("total_comments"),
             func.avg(VideoModel.comment_count).label("avg_comments"),
         ).first()
-        
+
+        agg = {key: getattr(aggregates, key) for key in aggregates.keys()} if aggregates else {}
+
         top_video = db.query(VideoModel).order_by(VideoModel.view_count.desc()).first()
-        
+
         return {
             "total_videos": total_videos,
-            "total_views": aggregates.total_views or 0,
-            "avg_views": round(aggregates.avg_views or 0, 2),
-            "total_likes": aggregates.total_likes or 0,
-            "avg_likes": round(aggregates.avg_likes or 0, 2),
-            "total_comments": aggregates.total_comments or 0,
-            "avg_comments": round(aggregates.avg_comments or 0, 2),
+            "total_views": agg.get("total_views") or 0,
+            "avg_views": round(agg.get("avg_views") or 0, 2),
+            "total_likes": agg.get("total_likes") or 0,
+            "avg_likes": round(agg.get("avg_likes") or 0, 2),
+            "total_comments": agg.get("total_comments") or 0,
+            "avg_comments": round(agg.get("avg_comments") or 0, 2),
             "top_video_title": top_video.title if top_video else None,
             "top_video_views": top_video.view_count if top_video else 0,
         }

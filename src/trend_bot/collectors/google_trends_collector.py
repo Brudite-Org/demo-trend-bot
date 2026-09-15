@@ -10,8 +10,7 @@ logger = setup_logger("google_trends_collector")
 class GoogleTrendsCollector:
     """Collects and organizes Google Trends data for multiple keywords."""
 
-    def __init__(self, api_key: str | None = None, geo: str = "IN", date: str = "now 7-d"):
-        self.api_key = api_key
+    def __init__(self, geo: str = "IN", date: str = "now 7-d"):
         self.geo = geo
         self.date = date 
         self.client = google_client
