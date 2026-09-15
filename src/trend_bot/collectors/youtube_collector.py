@@ -1,33 +1,37 @@
-from typing import Any, Dict, List
 from sqlalchemy import func
 from sqlalchemy.orm import Session
-from trend_bot.clients.client_youtube import YouTubeClient
+from typing import Any, Dict, List
+
+from trend_bot.clients.client_youtube import youtube_client
 from trend_bot.database.database import VideoModel
+from trend_bot.utils.constants import all_fields, update_fields
 
 class YouTubeCollector:
     """Collects, normalizes, manages persistence, and computes analytics for YouTube video trends."""
 
     def __init__(self, api_key: str | None = None):
         self.api_key = api_key
-        self.client = YouTubeClient(api_key=self.api_key)
+        self.client = youtube_client
 
     def collect(self, query: str | List[str], max_results: int = 5) -> List[Dict[str, Any]]:
         """Searches and enriches YouTube videos, returning structured dictionaries."""
         try:
-            video_objs = self.client.search_videos(query=query, max_results=max_results)
-            videos_data = []
+            video_objs = self.client.search_videos(
+                query=query,
+                max_results=max_results
+            )
+
+            videos_data: list[dict[str, Any]] = []
+
             for v in video_objs:
-                videos_data.append({
-                    "video_id": v.video_id,
-                    "title": v.title,
-                    "description": v.description,
-                    "channel_id": v.channel_id,
-                    "channel_title": v.channel_title,
-                    "published_at": v.published_at.isoformat() if hasattr(v.published_at, "isoformat") else str(v.published_at),
-                    "view_count": v.view_count,
-                    "like_count": v.like_count,
-                    "comment_count": v.comment_count,
-                })
+                video_data = {field: getattr(v, field) for field in all_fields}
+
+                if hasattr(video_data["published_at"], "isoformat"):
+                    video_data["published_at"] = video_data["published_at"].isoformat()
+                else:
+                    video_data["published_at"] = str(video_data["published_at"])
+
+                videos_data.append(video_data)
             return videos_data
         except Exception as e:
             print(f"Failed to fetch YouTube intelligence: {e}")
@@ -35,36 +39,28 @@ class YouTubeCollector:
 
     def save_to_db(self, db: Session, videos: List[Dict[str, Any]]) -> None:
         """Persists collected video payloads into PostgreSQL/SQLite."""
+
         added_count = 0
         updated_count = 0
+
         for video in videos:
             vid_id = video.get("video_id")
-            existing_video = db.query(VideoModel).filter(VideoModel.video_id == vid_id).first()
+            existing_video = (db.query(VideoModel).filter(VideoModel.video_id == vid_id).first())
+
             if existing_video:
-                existing_video.title = video.get("title")
-                existing_video.description = video.get("description")
-                existing_video.channel_title = video.get("channel_title")
-                existing_video.view_count = video.get("view_count")
-                existing_video.like_count = video.get("like_count")
-                existing_video.comment_count = video.get("comment_count")
+                # Update existing record dynamically
+                for field in update_fields:
+                    setattr(existing_video, field, video.get(field))
                 updated_count += 1
+
             else:
-                db_video = VideoModel(
-                    video_id=vid_id,
-                    title=video.get("title"),
-                    description=video.get("description"),
-                    channel_id=video.get("channel_id"),
-                    channel_title=video.get("channel_title"),
-                    published_at=video.get("published_at"),
-                    view_count=video.get("view_count"),
-                    like_count=video.get("like_count"),
-                    comment_count=video.get("comment_count"),
-                )
+                # Create new record dynamically
+                db_video = VideoModel(**{field: video.get(field) for field in all_fields})
                 db.add(db_video)
                 added_count += 1
                 print(f"Added: {video.get('title')}")
         db.commit()
-        print(f"Committed to db. ({added_count} added, {updated_count} updated)")
+        print(f"Committed to db.({added_count} added, {updated_count} updated)")
 
     def get_video_analytics(self, db: Session) -> dict[str, Any]:
         """Calculates overall metrics and trend summaries from the stored videos[cite: 1]."""

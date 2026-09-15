@@ -54,3 +54,6 @@ class GoogleTrendsClient:
             raise ValueError("TIMESERIES supports a maximum of 5 keywords.")
         keyword_query = ",".join(keywords)
         return self.search(keyword=keyword_query, geo=geo, date=date, data_type="TIMESERIES")
+
+
+google_client = GoogleTrendsClient(settings.SERPAPI_KEY)

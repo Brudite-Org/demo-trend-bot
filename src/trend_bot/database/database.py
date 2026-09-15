@@ -38,6 +38,21 @@ class GoogleTrendsModel(Base):
     
     collected_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
+class InstagramModel(Base):
+    __tablename__ = "instagram_posts"
+    
+    post_id = Column(String, primary_key=True, index=True)
+    caption = Column(String, nullable=True)
+    media_type = Column(String, nullable=True)
+    timestamp = Column(String, nullable=True)
+    likes = Column(Integer, default=0)
+    comments = Column(Integer, default=0)
+    link = Column(String, nullable=True)
+    track_title = Column(String, nullable=True)
+    artist = Column(String, nullable=True)
+    audio_url = Column(String, nullable=True)
+    collected_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
 
 def init_db():
     Base.metadata.create_all(bind=engine)

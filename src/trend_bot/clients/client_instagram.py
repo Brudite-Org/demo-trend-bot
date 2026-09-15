@@ -1,5 +1,7 @@
-from typing import Any, Dict, List
 from apify_client import ApifyClient
+from typing import Any, Dict, List, Iterator
+
+from trend_bot.config import settings
 
 class InstagramClient:
     """Client for extracting posts, reels, and their embedded music metadata via Apify."""
@@ -18,7 +20,7 @@ class InstagramClient:
         
         target_urls = [f"https://www.instagram.com/explore/tags/{target.strip('')}/" for target in targets]
         
-        run_input = {
+        run_input: dict[str, Any] = {
             "directUrls": target_urls,
             "resultsLimit": posts_limit,
             "addParentData": False,
@@ -35,12 +37,12 @@ class InstagramClient:
         if not dataset_id:
             raise RuntimeError("Could not retrieve default dataset ID.")
 
-        items = self.client.dataset(dataset_id).iterate_items()
+        items: Iterator[dict[Any, Any]] = self.client.dataset(dataset_id).iterate_items()
 
-        parsed_data = []
+        parsed_data: list[dict[str, Any]] = []
         for item in items:
             # Extract embedded music/audio info if present on the Reel/Post
-            music_info = item.get("musicInfo") or item.get("audioData") or {}
+            music_info: Any = item.get("musicInfo") or item.get("audioData") or {}
             
             parsed_data.append({
                 "post_id": item.get("id"),
@@ -56,3 +58,5 @@ class InstagramClient:
                 "audio_url": music_info.get("url")
             })
         return parsed_data
+
+instagram_client = InstagramClient(settings.APIFY_INSTAGRAM_TOKEN)

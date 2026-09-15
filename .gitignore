@@ -6,10 +6,7 @@ dist/
 wheels/
 *.egg-info
 
-test2.py
-test.py
-src\trend_bot\analytics.py
-src\trend_bot\main_copy.py
+logs.py
 
 
 # Virtual environments

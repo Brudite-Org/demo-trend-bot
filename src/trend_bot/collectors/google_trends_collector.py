@@ -1,6 +1,7 @@
-from typing import Any, Dict, List
 from sqlalchemy.orm import Session
-from trend_bot.clients.client_google_trends import GoogleTrendsClient
+from typing import Any, Dict, List
+
+from trend_bot.clients.client_google_trends import google_client
 from trend_bot.database.database import GoogleTrendsModel
 
 class GoogleTrendsCollector:
@@ -10,7 +11,7 @@ class GoogleTrendsCollector:
         self.api_key = api_key
         self.geo = geo
         self.date = date 
-        self.client = GoogleTrendsClient(api_key=self.api_key)
+        self.client = google_client
 
     def collect_keyword_info(self, keyword: str) -> Dict[str, Any]:
         """Collect all trend information for one keyword."""
@@ -25,14 +26,14 @@ class GoogleTrendsCollector:
         }
 
     def collect(self, keywords: List[str]) -> List[Dict[str, Any]]:
-        """Collect related queries, topics, and timeseries for every keyword[cite: 1]."""
+        """Collect related queries, topics, and timeseries for every keyword."""
         results: list[dict[str, Any]] = []
         cleaned_keywords: list[str] = []
 
         for keyword in keywords:
-            keyword_striped = keyword.strip()
-            if keyword and keyword_striped not in cleaned_keywords:
-                cleaned_keywords.append(keyword)
+            keyword_stripped = keyword.strip()
+            if keyword and keyword_stripped not in cleaned_keywords:
+                cleaned_keywords.append(keyword_stripped)
 
         for keyword in cleaned_keywords:
             try:
@@ -68,7 +69,7 @@ class GoogleTrendsCollector:
             )
             db.add(db_record)
         db.commit()
-
+    
     def format_summary(self, results: List[Dict[str, Any]]) -> str:
         """Converts structured Google Trends data into a text block for Gemini."""
         lines = ["[Google Trends Search Intelligence]"]
@@ -83,7 +84,12 @@ class GoogleTrendsCollector:
             if rising:
                 top_rising = [q.get("query") for q in rising[:3]]
                 lines.append(f"Rising Queries: {', '.join(top_rising)}")
-                
+
+            top = result.get("related_queries", {}).get("top", [])
+            if top:
+                top_top = [q.get("query") for q in top[:3]]
+                lines.append(f"Top Queries: {', '.join(top_top)}")
+
             timeline = result.get("interest_over_time", [])
             if timeline:
                 latest = timeline[-1]
